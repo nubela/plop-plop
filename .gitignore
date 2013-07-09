@@ -1,9 +1,6 @@
 cfg.py
 WATCHER.sh
 src/.sass-cache/
-resources/uploads*
-resources/test*
-resources/*
 .settings
 .*project
 v_env/

@@ -19,8 +19,9 @@ def new(project_name):
 
     cprint("Creating project..")
     plop_path = new_plop_project(project_name)
-    ios_path = new_ios_project(project_name)
-    android_path = new_android_project(project_name)
+    common_mobile_folder = new_mobile_proj_path(project_name)
+    ios_path = new_ios_project(project_name, common_mobile_folder)
+    android_path = new_android_project(project_name, common_mobile_folder)
     # put_git([plop_path, ios_path, android_path])
     cprint("All done.")
 
@@ -49,6 +50,16 @@ def deploy(project_name):
 
 #-- helper methods --#
 
+def new_mobile_proj_path(project_name):
+    cprint("Creating a bridging www folder for Phonegap..")
+    #cp web folder to project path
+    project_path = os.path.join(WORKSPACE_DIR, "%s-www")
+    mv_cmd = 'cd %s && cp -R %s %s' % (RESOURCES_PATH, "www", project_path)
+    os.system(mv_cmd)
+    cprint("Done.")
+    return project_path
+
+
 def new_folder(directory_path):
     if not os.path.exists(directory_path):
         os.makedirs(directory_path)
@@ -63,14 +74,15 @@ def _put_plop_requirements(proj_path):
 
 
 def _put_watcher(project_path):
-    watcher_file = os.path.join(project_path, "WATCHER.sh")
+    watcher_file_path = os.path.join(project_path, "WATCHER.sh")
     path_to_watch = os.path.join(project_path, "web")
-    f = open(watcher_file, "w+")
+    f = open(watcher_file_path, "w+")
     s = "\n".join([
         "#!/bin/bash",
         "python %s %s" % (WATCHER_FILE_PATH, path_to_watch),
     ])
     f.write(s)
+    os.system("chmod +x %s" % (watcher_file_path))
     f.close()
 
 
@@ -127,7 +139,7 @@ def new_plop_project(project_name):
     return proj_path
 
 
-def new_android_project(project_name):
+def new_android_project(project_name, www_folder):
     cprint("Working on Android project..")
     export_cmd = ":".join(["export PATH=${PATH}:"] + ANDROID_SDK_PATH_LIS)
     path_to_new_project = os.path.join(WORKSPACE_DIR, "%s-android" % (project_name))
@@ -143,7 +155,7 @@ def new_android_project(project_name):
     return path_to_new_project
 
 
-def new_ios_project(project_name):
+def new_ios_project(project_name, www_folder):
     cprint("Working on iOS project..")
     path_to_new_project = os.path.join(WORKSPACE_DIR, "%s-ios" % (project_name))
     commands = [

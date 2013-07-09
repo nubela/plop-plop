@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+html
+    head
+        > link rel="icon" type="image/png" href="/media/imgs/favicon.png"
+        title | Hello World
+        {% include "imports.html" %}
+
+    body
+        {% block body %}
+        Hello World
+        {% endblock %}
+        {% block footer %}
+        {% endblock %}
