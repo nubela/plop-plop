@@ -1,7 +1,8 @@
 from distutils.file_util import copy_file
+from bitbucket.bitbucket import Bitbucket
 
 from colorama import init, Fore
-from cfg import WORKSPACE_DIR, REQUIREMENTS, PLOP_PROJECT_PATH, WATCHER_FILE_PATH, PROJ_FILES, RESOURCES_PATH, ANDROID_SDK_PATH_LIS, ANDROID_PHONEGAP_BIN_PATH, IOS_PHONEGAP_BIN_PATH
+from cfg import WORKSPACE_DIR, REQUIREMENTS, PLOP_PROJECT_PATH, WATCHER_FILE_PATH, PROJ_FILES, RESOURCES_PATH, ANDROID_SDK_PATH_LIS, ANDROID_PHONEGAP_BIN_PATH, IOS_PHONEGAP_BIN_PATH, BITBUCKET_USERNAME, BITBUCKET_PASSWD
 import os
 from manager import Manager
 
@@ -22,16 +23,59 @@ def new(project_name):
     common_mobile_folder = new_mobile_proj_path(project_name)
     ios_path = new_ios_project(project_name, common_mobile_folder)
     android_path = new_android_project(project_name, common_mobile_folder)
-    # put_git([plop_path, ios_path, android_path])
+    put_git([plop_path, ios_path, android_path])
+    cprint("All done.")
+
+
+@manager.command
+def del_repository(project_name):
+    """
+    Shortcut to delete bitbucket repositories for the projects.
+    """
+    cprint("Deleting repositories..")
+    repositories_to_del = [
+        "%s-ios" % (project_name),
+        "%s-android" % (project_name),
+        "%s-plop" % (project_name),
+    ]
+    bb = Bitbucket(BITBUCKET_USERNAME, BITBUCKET_PASSWD)
+    for r in repositories_to_del:
+        cprint(".. Working on %s" % (r))
+        bb.repository.delete(r)
+        cprint(".. Repository deleted")
     cprint("All done.")
 
 
 @manager.command
 def create_repository(project_name):
     """
-    Create bitbucket repositories for the projects.
+    Create bitbucket repositories for the projects, and then adds them to the bitbucket
     """
-    pass
+    cprint("Creating repositories..")
+    #create em repositories
+    repositories_to_create = [
+        "%s-ios" % (project_name),
+        "%s-android" % (project_name),
+        "%s-plop" % (project_name),
+    ]
+    bb = Bitbucket(BITBUCKET_USERNAME, BITBUCKET_PASSWD)
+    for r in repositories_to_create:
+        cprint(".. Working on %s" % (r))
+        bb.repository.create(r, private=True)
+        cprint(".. Repository created")
+
+    #add remote to the various project folders
+    proj_folders = map(lambda x: (x, os.path.join(WORKSPACE_DIR, x)), repositories_to_create)
+    for p_name, pf in proj_folders:
+        cmds = [
+            "cd %s" % (pf),
+            "git remote add origin https://unifide@bitbucket.org/unifide/%s.git" % (p_name),
+        ]
+        full_cmd = " && ".join(cmds)
+        cprint(".. Adding remote to %s project" % (p_name))
+        os.system(full_cmd)
+
+    cprint("All done.")
 
 
 @manager.command
@@ -99,9 +143,6 @@ def _put_plop_files(project_path):
 
     #add watcher
     _put_watcher(project_path)
-
-    #update cfg.py
-    pass
 
 
 def new_plop_project(project_name):
@@ -180,10 +221,14 @@ def cprint(text):
 
 
 def put_git(path_lis):
-    #put gitignore
-
-    #git init
-    pass
+    for path in path_lis:
+        cmd_lis = [
+            "cd %s" % (path),
+            "git init",
+        ]
+        full_cmd = " && ".join(cmd_lis)
+        cprint(".. Initialising git on %s" % (path))
+        os.system(full_cmd)
 
 #-- main --#
 
