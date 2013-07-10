@@ -1,7 +1,8 @@
+import uuid
 from bitbucket.bitbucket import Bitbucket
 
 from colorama import init, Fore
-from cfg import WORKSPACE_DIR, PLOP_PROJECT_PATH, WATCHER_FILE_PATH, RESOURCES_PATH, ANDROID_SDK_PATH_LIS, ANDROID_PHONEGAP_BIN_PATH, IOS_PHONEGAP_BIN_PATH, BITBUCKET_USERNAME, BITBUCKET_PASSWD
+from cfg import WORKSPACE_DIR, PLOP_PROJECT_PATH, WATCHER_FILE_PATH, RESOURCES_PATH, ANDROID_SDK_PATH_LIS, ANDROID_PHONEGAP_BIN_PATH, IOS_PHONEGAP_BIN_PATH, BITBUCKET_USERNAME, BITBUCKET_PASSWD, BACKEND_CFG
 import os
 from manager import Manager
 
@@ -26,7 +27,17 @@ def new(project_name):
     put_backend(project_name)
     put_platform(project_name)
     put_git([plop_path, ios_path, android_path, cfg_path])
+
     cprint("All done.")
+
+    next_steps = """
+Your project is now created at %s.
+The SHPAML files in your projects are not yet converted, so pleaes do a ./WATCHER before you begin each sub-project.
+
+Backend: You will need to update brand_cfg.py and then run python configure_brand.py when you are done.
+PS: Your next command should be python plop.py add_repo <proj_name>
+    """
+    return next_steps
 
 
 @manager.command
@@ -277,12 +288,17 @@ def _run_cmd_lis(cmd_lis):
     os.system(full_cmd)
 
 
+def _cfg_proj_path(project_name):
+    cfg_project_path = os.path.join(_proj_workspace(project_name), "%s-cfg" % (project_name))
+    return cfg_project_path
+
+
 def new_cfg_project(project_name):
     """
     Recursively copies the cfg project from resources to the project workspace
     """
     cprint("Working on CFG project..")
-    cfg_project_path = os.path.join(_proj_workspace(project_name), "%s-cfg" % (project_name))
+    cfg_project_path = _cfg_proj_path(project_name)
     cmd_lis = [
         "cd %s" % (RESOURCES_PATH),
         "cp -R %s %s" % ("cfg_proj", cfg_project_path),
@@ -290,6 +306,34 @@ def new_cfg_project(project_name):
     _run_cmd_lis(cmd_lis)
     cprint("Done.\n")
     return cfg_project_path
+
+
+def _setup_backend_cfg(project_name):
+    """
+    Localise the config files for backend by generating some localised fields for it
+    """
+    lines = []
+
+    #secret key -> SECRET_KEY = "b4ef3a73-5d52-11e2-9b58-14109feb3038"
+    secret_key = _generate_uuid()
+    lines += ["SECRET_KEY = '%s'" % (secret_key)]
+
+    #mongo uri -> MONGO_URI = 'mongodb://localhost/unifide'
+    lines += ["MONGO_URI = 'mongodb://localhost/%s'" % (project_name)]
+
+    #mongodb -> MONGO_DB = "dada"
+    lines += ["MONGO_DB = '%s'" % (project_name)]
+
+    cfg_project_path = _cfg_proj_path(project_name)
+    backend_cfg_file = os.path.join(cfg_project_path, "cfg.py")
+    f = open(backend_cfg_file, "a")
+    for l in lines:
+        f.write("%s\n" % (l))
+    f.close()
+
+
+def _generate_uuid():
+    return str(uuid.uuid1())
 
 
 def put_backend(project_name):
@@ -305,10 +349,18 @@ def put_backend(project_name):
     _run_cmd_lis(cmd_lis)
 
     #link cfg
-    pass
+    backend_path = os.path.join(_proj_workspace(project_name), "unifide-backend")
+    cfg_project_path = _cfg_proj_path(project_name)
+    for cfg in BACKEND_CFG:
+        cmd_lis = [
+            "cd %s" % (backend_path),
+            "ln -s %s" % (os.path.join(cfg_project_path, cfg)),
+        ]
+        _run_cmd_lis(cmd_lis)
+    _setup_backend_cfg(project_name)
 
     cprint("Done.\n")
-    return os.path.join(_proj_workspace(project_name), "unifide-backend")
+    return backend_path
 
 
 def put_platform(project_name):
@@ -321,13 +373,32 @@ def put_platform(project_name):
     _run_cmd_lis(cmd_lis)
 
     #link cfg
-    pass
+    cprint(".. Linking cfg")
+    platform_path = os.path.join(_proj_workspace(project_name), "unifide-platform")
+    platform_cfg_folder_path = os.path.join(platform_path, "lib")
+    cfg_project_path = _cfg_proj_path(project_name)
+    cmd_lis = [
+        "cd %s" % (platform_cfg_folder_path),
+        "rm -f %s" % (os.path.join(platform_cfg_folder_path, "cfg.js")),
+        "ln -s %s" % (os.path.join(cfg_project_path, "cfg.js")),
+    ]
+    _run_cmd_lis(cmd_lis)
 
     #setup RunMeteor file
-    pass
+    cprint(".. Setting up RunMeteor")
+    str = "PORT=3000 MONGO_URL=mongodb://localhost:27017/%s ROOT_URL=. meteor run" % (project_name)
+    run_meteor_file_path = os.path.join(platform_path, "RunMeteor")
+    run_meteor_file = open(run_meteor_file_path, "w")
+    run_meteor_file.write(str)
+    run_meteor_file.close()
+    cmd_lis = [
+        "cd %s" % (platform_path),
+        "chmod +x %s" % (run_meteor_file_path),
+    ]
+    _run_cmd_lis(cmd_lis)
 
     cprint("Done.\n")
-    return os.path.join(_proj_workspace(project_name), "unifide-backend")
+    return platform_path
 
 
 def _proj_workspace(project_name):
