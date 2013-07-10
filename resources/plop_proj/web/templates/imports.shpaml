@@ -1,0 +1,8 @@
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="/media/css/bootstrap.min.css" rel="stylesheet" media="screen">
+<link href="/media/css/main.css" rel="stylesheet" media="screen">
+
+<script src="/media/js/bootstrap.min.js"></script>
+<script src="/media/js/parsley.js"></script>
+<script src="/media/js/main.js"></script>
