@@ -2,7 +2,7 @@ import uuid
 from bitbucket.bitbucket import Bitbucket
 
 from colorama import init, Fore
-from cfg import WORKSPACE_DIR, PLOP_PROJECT_PATH, WATCHER_FILE_PATH, RESOURCES_PATH, ANDROID_SDK_PATH_LIS, ANDROID_PHONEGAP_BIN_PATH, IOS_PHONEGAP_BIN_PATH, BITBUCKET_USERNAME, BITBUCKET_PASSWD, BACKEND_CFG
+from cfg import WORKSPACE_DIR, PLOP_PROJECT_PATH, WATCHER_FILE_PATH, RESOURCES_PATH, ANDROID_SDK_PATH_LIS, ANDROID_PHONEGAP_BIN_PATH, IOS_PHONEGAP_BIN_PATH, BITBUCKET_USERNAME, BITBUCKET_PASSWD, BACKEND_CFG, PLOP_LIBRARIES
 import os
 from manager import Manager
 
@@ -36,7 +36,7 @@ The SHPAML files in your projects are not yet converted, so pleaes do a ./WATCHE
 
 Backend: You will need to update brand_cfg.py and then run python configure_brand.py when you are done.
 PS: Your next command should be python plop.py add_repo <proj_name>
-    """
+    """ % (os.path.join(WORKSPACE_DIR, project_name))
     return next_steps
 
 
@@ -116,10 +116,59 @@ def push(project_name):
     cprint("Done.\n")
 
 
+def _clone_deployment_projects(project_name):
+    git_repos = [
+        "git@bitbucket.org:unifide/%s-cfg.git" % (project_name),
+        "git@bitbucket.org:unifide/%s-plop.git" % (project_name),
+        "git@bitbucket.org:unifide/%s-android.git" % (project_name),
+        "git@bitbucket.org:unifide/%s-ios.git" % (project_name),
+        "git@bitbucket.org:kianwei/unifide-platform.git"
+        "git@bitbucket.org:kianwei/unifide-backend.git"
+    ]
+    proj_workspace = _proj_workspace(project_name)
+    for repo in git_repos:
+        cmd_lines = [
+            "cd %s" % (proj_workspace),
+            "git clone %s" % (repo),
+        ]
+        cprint(".. Cloning %s" % (repo))
+        _run_cmd_lis(cmd_lines)
+
+
+def _backend_path(project_name):
+    return os.path.join(_proj_workspace(project_name), "unifide-backend")
+
+
+def _deploy_ready_platform_cfg(project_name):
+    #todo
+    pass
+
+
 @manager.command
 def deploy(project_name):
     """
+    (This command should be executed in the production machine)
+    Deploys a project that is already pushed to bitbucket onto a production machine.
     """
+    cprint("Deploying..")
+
+    #clone
+    _clone_deployment_projects(project_name)
+
+    #link libraries in plop
+    _link_plop_libs(_plop_path(project_name))
+
+    #link cfg for backend and platform
+    _link_backend_cfg(_backend_path(project_name), project_name)
+    _deploy_ready_platform_cfg(project_name)
+
+    #brand cfg
+
+    #update cfg
+
+    #nginx setup
+
+    #set dns
     pass
 
 #-- helper methods --#
@@ -160,11 +209,25 @@ def _put_plop_watcher(project_path):
     _put_generic_watcher(project_path, path_to_watch)
 
 
+def _link_plop_libs(proj_path):
+    for lib in PLOP_LIBRARIES:
+        base_package_path = os.path.join(PLOP_PROJECT_PATH, lib)
+        ln_cmd_lis = [
+            "cd %s" % (proj_path),
+            "ln -s %s" % (base_package_path)
+        ]
+        _run_cmd_lis(ln_cmd_lis)
+
+
+def _plop_path(project_name):
+    return os.path.join(_proj_workspace(project_name), "%s-plop" % (project_name))
+
+
 def new_plop_project(project_name):
     cprint("Working on plop..")
 
     #create folder
-    proj_path = os.path.join(_proj_workspace(project_name), "%s-plop" % (project_name))
+    proj_path = _plop_path(project_name)
     cmd_lis = [
         "cd %s" % (RESOURCES_PATH),
         "cp -R %s %s" % ("plop_proj", proj_path),
@@ -189,12 +252,7 @@ def new_plop_project(project_name):
     _run_cmd_lis(pip_install_cmd_lis)
 
     #link base
-    base_package_path = os.path.join(PLOP_PROJECT_PATH, "base")
-    ln_cmd_lis = [
-        "cd %s" % (proj_path),
-        "ln -s %s" % (base_package_path)
-    ]
-    _run_cmd_lis(ln_cmd_lis)
+    _link_plop_libs(proj_path)
 
     #add watcher
     _put_plop_watcher(proj_path)
@@ -220,8 +278,8 @@ def new_android_project(project_name, www_folder):
     www_folder_path = os.path.join(path_to_new_project, "www")
     cmd_lis = [
         "rm -rf %s" % (www_folder_path),
-        "cd %s" % (RESOURCES_PATH),
-        "cp -R %s %s" % ("www", path_to_new_project),
+        "cd %s" % (path_to_new_project),
+        "ln -s %s" % (www_folder),
     ]
     _run_cmd_lis(cmd_lis)
 
@@ -250,8 +308,8 @@ def new_ios_project(project_name, www_folder):
     www_folder_path = os.path.join(path_to_new_project, "assets", "www")
     cmd_lis = [
         "rm -rf %s" % (www_folder_path),
-        "cd %s" % (RESOURCES_PATH),
-        "cp -R %s %s" % ("www", os.path.join(path_to_new_project, "assets")),
+        "cd %s" % (os.path.join(path_to_new_project, "assets")),
+        "ln -s %s" % (www_folder),
     ]
     _run_cmd_lis(cmd_lis)
 
@@ -336,6 +394,17 @@ def _generate_uuid():
     return str(uuid.uuid1())
 
 
+def _link_backend_cfg(backend_path, project_name):
+    cfg_project_path = _cfg_proj_path(project_name)
+    for cfg in BACKEND_CFG:
+        cmd_lis = [
+            "cd %s" % (backend_path),
+            "ln -s %s" % (os.path.join(cfg_project_path, cfg)),
+        ]
+        _run_cmd_lis(cmd_lis)
+    _setup_backend_cfg(project_name)
+
+
 def put_backend(project_name):
     """
     Clones a brand new unifide backend project
@@ -349,18 +418,15 @@ def put_backend(project_name):
     _run_cmd_lis(cmd_lis)
 
     #link cfg
-    backend_path = os.path.join(_proj_workspace(project_name), "unifide-backend")
-    cfg_project_path = _cfg_proj_path(project_name)
-    for cfg in BACKEND_CFG:
-        cmd_lis = [
-            "cd %s" % (backend_path),
-            "ln -s %s" % (os.path.join(cfg_project_path, cfg)),
-        ]
-        _run_cmd_lis(cmd_lis)
-    _setup_backend_cfg(project_name)
+    backend_path = _backend_path(project_name)
+    _link_backend_cfg(backend_path, project_name)
 
     cprint("Done.\n")
     return backend_path
+
+
+def _platform_path(project_name):
+    return os.path.join(_proj_workspace(project_name), "unifide-platform")
 
 
 def put_platform(project_name):
@@ -374,7 +440,7 @@ def put_platform(project_name):
 
     #link cfg
     cprint(".. Linking cfg")
-    platform_path = os.path.join(_proj_workspace(project_name), "unifide-platform")
+    platform_path = _platform_path(project_name)
     platform_cfg_folder_path = os.path.join(platform_path, "lib")
     cfg_project_path = _cfg_proj_path(project_name)
     cmd_lis = [
