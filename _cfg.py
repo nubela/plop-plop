@@ -6,8 +6,8 @@ ANDROID_SDK_PATH_LIS = [
     "/Applications/Android\ Studio.app/sdk/platform-tools",
     "/Applications/Android\ Studio.app/sdk/tools"
 ]
-IOS_PHONEGAP_BIN_PATH = "/Users/nubela/Workspace/phonegap-2.7.0/lib/android/bin"
-ANDROID_PHONEGAP_BIN_PATH = "/Users/nubela/Workspace/phonegap-2.7.0/lib/ios/bin"
+IOS_PHONEGAP_BIN_PATH = "/Users/nubela/Workspace/phonegap-2.7.0/lib/ios/bin"
+ANDROID_PHONEGAP_BIN_PATH = "/Users/nubela/Workspace/phonegap-2.7.0/lib/android/bin"
 WATCHER_FILE_PATH = "/Users/nubela/Workspace/transcompiler-watcher/src/watch.py"
 
 #-- some config that i tried to automate, but you can modify as you deem fit --#
@@ -38,4 +38,13 @@ PROJ_FILES = [
     os.path.join(RESOURCES_PATH, "cfg.py"),
     os.path.join(RESOURCES_PATH, "_cfg.py"),
     os.path.join(RESOURCES_PATH, ".gitignore"),
+]
+
+BACKEND_CFG = [
+    "brand_cfg.py",
+    "cfg.py",
+]
+
+PLOP_LIBRARIES = [
+    "base",
 ]
