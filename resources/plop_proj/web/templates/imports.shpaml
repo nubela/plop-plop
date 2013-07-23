@@ -3,6 +3,8 @@
 <link href="/media/css/bootstrap.min.css" rel="stylesheet" media="screen">
 <link href="/media/css/main.css" rel="stylesheet" media="screen">
 
+<script src="/media/js/jquery-1.9.1.min.js"></script>
+<script src="/media/js/underscore-min.js"></script>
 <script src="/media/js/bootstrap.min.js"></script>
 <script src="/media/js/parsley.js"></script>
 <script src="/media/js/main.js"></script>
