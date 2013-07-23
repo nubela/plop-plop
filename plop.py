@@ -173,8 +173,9 @@ def _deploy_ready_cfg(project_name):
 def _deploy_brand_cfg(project_name):
     backend_path = _backend_path(project_name)
     cmd_lis = [
-        "cd %s" % (os.path.join(backend_path, "src")),
+        "cd %s" % (backend_path),
         ". v_env/bin/activate",
+        "cd %s" % (os.path.join(backend_path, "src")),
         "python configure_brand.py",
     ]
     _run_cmd_lis(cmd_lis)
