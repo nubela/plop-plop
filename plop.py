@@ -121,8 +121,6 @@ def _clone_deployment_projects(project_name):
     git_repos = [
         "git@bitbucket.org:unifide/%s-cfg.git" % (project_name),
         "git@bitbucket.org:unifide/%s-plop.git" % (project_name),
-        "git@bitbucket.org:unifide/%s-android.git" % (project_name),
-        "git@bitbucket.org:unifide/%s-ios.git" % (project_name),
         "git@bitbucket.org:kianwei/unifide-platform.git"
         "git@bitbucket.org:kianwei/unifide-backend.git"
     ]
@@ -136,9 +134,50 @@ def _clone_deployment_projects(project_name):
         _run_cmd_lis(cmd_lines)
 
 
-def _deploy_ready_platform_cfg(project_name):
-    #todo
-    pass
+def _deploy_ready_cfg(project_name):
+    """
+    Update backend's project's cfg.py for deployment
+    """
+    cfg_project_path = _cfg_proj_path(project_name)
+    platform_url = "http://unifide.%s.unifide.sg/" % (project_name)
+    backend_url = "http://backend.%s.unifide.sg/" % (project_name)
+    plop_url = "http://%s.unifide.sg/" % (project_name)
+
+    #update cfg.js
+    js_cfg_file_path = os.path.join(cfg_project_path, "cfg.js")
+    all_lines = [
+        'BACKEND_URL = "%s/";' % (backend_url),
+        'PLATFORM_URL = "%s/";' % (platform_url),
+    ]
+    f = open(js_cfg_file_path, "w")
+    f.write("\n".join(all_lines))
+    f.close()
+
+    #update cfg.py
+    py_cfg_file_path = os.path.join(cfg_project_path, "cfg.py")
+    f = open(py_cfg_file_path, "r")
+    lines = f.readlines()
+    f.close()
+    full_cfg = "\n".join(lines)
+    full_cfg = full_cfg.replace("127.0.0.1:3000", platform_url)
+    full_cfg = full_cfg.replace("localhost:3000", platform_url)
+    full_cfg = full_cfg.replace("localhost:5000", backend_url)
+    full_cfg = full_cfg.replace("127.0.0.1:5000", backend_url)
+    full_cfg = full_cfg.replace("127.0.0.1:5001", plop_url)
+    full_cfg = full_cfg.replace("localhost:5001", plop_url)
+    f = open(py_cfg_file_path, "w")
+    f.write(full_cfg)
+    f.close()
+
+
+def _deploy_brand_cfg(project_name):
+    backend_path = _backend_path(project_name)
+    cmd_lis = [
+        "cd %s" % (os.path.join(backend_path, "src")),
+        "source v_env/bin/activate",
+        "python configure_brand.py",
+    ]
+    _run_cmd_lis(cmd_lis)
 
 
 @manager.command
@@ -149,24 +188,22 @@ def deploy(project_name):
     """
     cprint("Deploying..")
 
-    #clone
+    cprint(".. Cloning projects")
     _clone_deployment_projects(project_name)
 
-    #link libraries in plop
+    cprint(".. Linking libraries from plop")
     _link_plop_libs(_plop_path(project_name))
 
-    #link cfg for backend and platform
+    cprint(".. Linking cfg for backend/platform")
     _link_backend_cfg(_backend_path(project_name), project_name)
-    _deploy_ready_platform_cfg(project_name)
 
-    #brand cfg
+    cprint(".. Updating projects' config")
+    _deploy_ready_cfg(project_name)
 
-    #update cfg
+    cprint(".. Configuring brand config")
+    _deploy_brand_cfg(project_name)
 
     #nginx setup
-
-    #set dns
-    pass
 
 #-- helper methods --#
 
