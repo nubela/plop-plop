@@ -111,7 +111,7 @@ def push(project_name):
         cprint(".. Pushing in %s" % (f))
         cmd_lis = [
             "cd %s" % (f),
-            "git push",
+            "git push origin master",
         ]
         _run_cmd_lis(cmd_lis)
     cprint("Done.\n")
