@@ -174,7 +174,7 @@ def _deploy_brand_cfg(project_name):
     backend_path = _backend_path(project_name)
     cmd_lis = [
         "cd %s" % (os.path.join(backend_path, "src")),
-        "source v_env/bin/activate",
+        ". v_env/bin/activate",
         "python configure_brand.py",
     ]
     _run_cmd_lis(cmd_lis)
@@ -197,6 +197,7 @@ def deploy(project_name):
     _put_venv(backend_path)
     _pip_install(backend_path)
 
+    cprint(".. Creating and installing requirements for virtualenv (Platform)")
     plop_path = _plop_path(project_name)
     _put_venv(plop_path)
     _pip_install(plop_path)
@@ -280,7 +281,7 @@ def _put_venv(proj_path):
 def _pip_install(proj_path):
     pip_install_cmd_lis = [
         "cd %s" % (proj_path),
-        "source v_env/bin/activate",
+        ". v_env/bin/activate",
         "pip install -r REQUIREMENTS",
     ]
     _run_cmd_lis(pip_install_cmd_lis)
