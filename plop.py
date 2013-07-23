@@ -191,6 +191,16 @@ def deploy(project_name):
     cprint(".. Cloning projects")
     _clone_deployment_projects(project_name)
 
+    #create virtualenv
+    cprint(".. Creating and installing requirements for virtualenv (Backend)")
+    backend_path = _backend_path(project_name)
+    _put_venv(backend_path)
+    _pip_install(backend_path)
+
+    plop_path = _plop_path(project_name)
+    _put_venv(plop_path)
+    _pip_install(plop_path)
+
     cprint(".. Linking libraries from plop")
     _link_plop_libs(_plop_path(project_name))
 
