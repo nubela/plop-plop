@@ -121,8 +121,8 @@ def _clone_deployment_projects(project_name):
     git_repos = [
         "git@bitbucket.org:unifide/%s-cfg.git" % (project_name),
         "git@bitbucket.org:unifide/%s-plop.git" % (project_name),
-        "git@bitbucket.org:kianwei/unifide-platform.git"
-        "git@bitbucket.org:kianwei/unifide-backend.git"
+        "git@bitbucket.org:kianwei/unifide-platform.git",
+        "git@bitbucket.org:kianwei/unifide-backend.git",
     ]
     proj_workspace = _proj_workspace(project_name)
     for repo in git_repos:
