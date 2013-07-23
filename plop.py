@@ -246,8 +246,10 @@ def _put_plop_watcher(project_path):
 def _link_plop_libs(proj_path):
     for lib in PLOP_LIBRARIES:
         base_package_path = os.path.join(PLOP_PROJECT_PATH, lib)
+        to_del = os.path.join(proj_path, lib)
         ln_cmd_lis = [
             "cd %s" % (proj_path),
+            "rm -f %s" % (to_del),
             "ln -s %s" % (base_package_path)
         ]
         _run_cmd_lis(ln_cmd_lis)
