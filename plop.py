@@ -204,7 +204,7 @@ def _compile_platform(project_name):
 def _update_nginx_for_flask(plop_file_name, plop_name, project_name, staging_plop_cfg_path):
     staging = open(staging_plop_cfg_path, "r")
     staging_material = staging.read()
-    staging = staging % {
+    staging_material = staging_material % {
         "proj_name": plop_name,
         "proj_url": plop_file_name,
         "proj_path": _plop_path(project_name),
@@ -250,7 +250,7 @@ def _prep_nginx_config(project_name):
     #update platform
     staging = open(staging_platform_cfg_path, "r")
     staging_material = staging.read()
-    staging = staging % {
+    staging_material = staging_material % {
         "proj_name": platform_name,
         "port": meteor_port,
         "proj_url": platform_file_name,
