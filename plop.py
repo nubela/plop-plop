@@ -712,8 +712,10 @@ def _release_port(port_no):
 def _get(key):
     f = open(DICT_FILE, "w+")
     stuff = f.read()
-    if stuff is None: stuff = "{}"
-    d = json.loads(stuff)
+    try:
+        d = json.loads(stuff)
+    except:
+        d = {}
     f.close()
     return d[key] if key in d else None
 
@@ -721,8 +723,10 @@ def _get(key):
 def _set(key, value):
     f = open(DICT_FILE, "w+")
     stuff = f.read()
-    if stuff is None: stuff = "{}"
-    d = json.loads(stuff)
+    try:
+        d = json.loads(stuff)
+    except:
+        d = {}
     f.close()
 
     d[key] = value
