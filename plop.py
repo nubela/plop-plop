@@ -279,8 +279,7 @@ def _run_apps(project_name, port_no):
         "venv": path_to_backend_venv,
     }
     backend_cmd_args = backend_cmd.split(" ")
-    backend = subprocess.Popen(backend_cmd_args, stdout=subprocess.PIPE, shell=True)
-    print backend.stdout.read()
+    backend = subprocess.Popen(backend_cmd_args, stdout=subprocess.PIPE, shell=True, preexec_fn=os.setpgrp)
 
     #run plop
     plop_cmd = ". %(venv)s && python %(fcgi)s" % {
@@ -288,8 +287,7 @@ def _run_apps(project_name, port_no):
         "venv": path_to_plop_venv,
     }
     plop_cmd_args = plop_cmd.split(" ")
-    plop = subprocess.Popen(plop_cmd_args, stdout=subprocess.PIPE, shell=True)
-    print plop.stdout.read()
+    plop = subprocess.Popen(plop_cmd_args, stdout=subprocess.PIPE, shell=True, preexec_fn=os.setpgrp)
 
     env = os.environ.copy()
     env["ROOT_URL"] = "."
@@ -297,8 +295,7 @@ def _run_apps(project_name, port_no):
     env["MONGO_URL"] = "mongodb://localhost:27017/%s" % (project_name)
     meteor_cmd = "node %s" % path_to_meteor_mainjs
     meteor_cmd_args = meteor_cmd.split(" ")
-    meteor = subprocess.Popen(meteor_cmd_args, stdout=subprocess.PIPE, shell=True, env=env)
-    print meteor.stdout.read()
+    meteor = subprocess.Popen(meteor_cmd_args, stdout=subprocess.PIPE, shell=True, env=env, preexec_fn=os.setpgrp)
 
     return backend.pid, plop.pid, meteor.pid
 
