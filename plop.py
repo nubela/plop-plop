@@ -260,6 +260,13 @@ def _prep_nginx_config(project_name):
     staging.write(staging_material)
     staging.close()
 
+    #cleanup
+    cmd_lis = [
+        "rm -f %s" % (staging_platform_cfg_path),
+        "rm -f %s" % (staging_backend_cfg_path),
+        "rm -f %s" % (staging_plop_cfg_path),
+    ]
+
     return backend_file_name, plop_file_name, platform_file_name, meteor_port
 
 
