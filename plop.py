@@ -710,7 +710,7 @@ def _release_port(port_no):
 
 
 def _get(key):
-    f = open(DICT_FILE, "r+")
+    f = open(DICT_FILE, "w+")
     stuff = f.read()
     d = json.loads(stuff)
     f.close()
@@ -718,7 +718,7 @@ def _get(key):
 
 
 def _set(key, value):
-    f = open(DICT_FILE, "r+")
+    f = open(DICT_FILE, "w+")
     stuff = f.read()
     d = json.loads(stuff)
     f.close()
