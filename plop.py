@@ -209,7 +209,8 @@ def deploy(project_name):
     _link_plop_libs(src_path)
 
     cprint(".. Linking cfg for backend/platform")
-    _link_backend_cfg(_backend_path(project_name), project_name)
+    _link_backend_cfg(src_path, project_name)
+    _link_backend_cfg(plop_path, project_name)
 
     cprint(".. Updating projects' config")
     _deploy_ready_cfg(project_name)
