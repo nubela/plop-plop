@@ -139,8 +139,8 @@ def _deploy_ready_cfg(project_name):
     Update backend's project's cfg.py for deployment
     """
     cfg_project_path = _cfg_proj_path(project_name)
-    platform_url = "http://unifide.%s.unifide.sg/" % (project_name)
-    backend_url = "http://backend.%s.unifide.sg/" % (project_name)
+    platform_url = "http://unifide.%s.unifide.sg" % (project_name)
+    backend_url = "http://backend.%s.unifide.sg" % (project_name)
     plop_url = "http://%s.unifide.sg/" % (project_name)
 
     #update cfg.js
@@ -158,15 +158,18 @@ def _deploy_ready_cfg(project_name):
     f = open(py_cfg_file_path, "r")
     lines = f.readlines()
     f.close()
-    full_cfg = "\n".join(lines)
-    full_cfg = full_cfg.replace("127.0.0.1:3000", platform_url)
-    full_cfg = full_cfg.replace("localhost:3000", platform_url)
-    full_cfg = full_cfg.replace("localhost:5000", backend_url)
-    full_cfg = full_cfg.replace("127.0.0.1:5000", backend_url)
-    full_cfg = full_cfg.replace("127.0.0.1:5001", plop_url)
-    full_cfg = full_cfg.replace("localhost:5001", plop_url)
+    final_lines = []
+    for l in lines:
+        l = l.replace("127.0.0.1:3000", platform_url)
+        l = l.replace("localhost:3000", platform_url)
+        l = l.replace("localhost:5000", backend_url)
+        l = l.replace("127.0.0.1:5000", backend_url)
+        l = l.replace("127.0.0.1:5001", plop_url)
+        l = l.replace("localhost:5001", plop_url)
+        l = l.replace("\n", "")
+        final_lines += [l]
     f = open(py_cfg_file_path, "w")
-    f.write(full_cfg)
+    f.write("\n".join(final_lines))
     f.close()
 
 
