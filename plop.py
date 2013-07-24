@@ -195,6 +195,7 @@ def deploy(project_name):
     #create virtualenv
     cprint(".. Creating and installing requirements for virtualenv (Backend)")
     backend_path = _backend_path(project_name)
+    src_path = os.path.join(backend_path, "src")
     _put_venv(backend_path)
     _pip_install(backend_path)
 
@@ -204,7 +205,8 @@ def deploy(project_name):
     _pip_install(plop_path)
 
     cprint(".. Linking libraries from plop")
-    _link_plop_libs(_plop_path(project_name))
+    _link_plop_libs(plop_path)
+    _link_plop_libs(src_path)
 
     cprint(".. Linking cfg for backend/platform")
     _link_backend_cfg(_backend_path(project_name), project_name)
