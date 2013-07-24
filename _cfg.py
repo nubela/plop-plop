@@ -13,6 +13,8 @@ WATCHER_FILE_PATH = "/Users/nubela/Workspace/transcompiler-watcher/src/watch.py"
 #-- some config that i tried to automate, but you can modify as you deem fit --#
 
 CWD = os.getcwd()
+DICT_FILE = os.path.join(CWD, "settings.cfg")
+METEOR_PORT_RANGE = range(3001, 10000)
 WORKSPACE_DIR = os.path.dirname(CWD)
 PLOP_PROJECT_PATH = os.path.join(WORKSPACE_DIR, "unifide-plop")
 RESOURCES_PATH = os.path.join(CWD, "resources")
@@ -47,4 +49,9 @@ BACKEND_CFG = [
 
 PLOP_LIBRARIES = [
     "base",
+    "campaigns",
+    "comments",
+    "ecommerce",
+    "orders",
+    "support",
 ]
