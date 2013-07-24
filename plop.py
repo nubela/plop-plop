@@ -262,14 +262,6 @@ def _prep_nginx_config(project_name):
     staging.write(staging_material)
     staging.close()
 
-    #cleanup
-    cmd_lis = [
-        "rm -f %s" % (staging_platform_cfg_path),
-        "rm -f %s" % (staging_backend_cfg_path),
-        "rm -f %s" % (staging_plop_cfg_path),
-    ]
-    _run_cmd_lis(cmd_lis)
-
     return backend_file_name, plop_file_name, platform_file_name, meteor_port
 
 
@@ -362,8 +354,11 @@ def deploy(project_name):
         "sudo ln -s /etc/nginx/sites-available/%s" % (plop_filename),
         "sudo ln -s /etc/nginx/sites-available/%s" % (backend_filename),
         "sudo ln -s /etc/nginx/sites-available/%s" % (platform_filename),
+        "rm -f %s" % (platform_filename),
+        "rm -f %s" % (backend_filename),
+        "rm -f %s" % (plop_filename),
     ]
-    _run_cmd_lis(cmd_lis)
+    _run_cmd_lis(cmd_lis)    
 
     cprint(".. Launching NodeJS app and FCGI apps")
     _run_apps(project_name, port_no=meteor_port_no)
