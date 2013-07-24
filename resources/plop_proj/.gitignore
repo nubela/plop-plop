@@ -14,3 +14,9 @@ error.log
 src/.idea*
 .DS_Store
 .idea*
+base
+campaigns
+comments
+ecommerce
+orders
+support

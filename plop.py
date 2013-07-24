@@ -266,6 +266,7 @@ def _prep_nginx_config(project_name):
         "rm -f %s" % (staging_backend_cfg_path),
         "rm -f %s" % (staging_plop_cfg_path),
     ]
+    _run_cmd_lis(cmd_lis)
 
     return backend_file_name, plop_file_name, platform_file_name, meteor_port
 
