@@ -354,9 +354,9 @@ def deploy(project_name):
         "sudo ln -s /etc/nginx/sites-available/%s" % (plop_filename),
         "sudo ln -s /etc/nginx/sites-available/%s" % (backend_filename),
         "sudo ln -s /etc/nginx/sites-available/%s" % (platform_filename),
-        "rm -f %s" % (platform_filename),
-        "rm -f %s" % (backend_filename),
-        "rm -f %s" % (plop_filename),
+        "rm -f %s" % (os.path.join(os.getcwd(), platform_filename)),
+        "rm -f %s" % (os.path.join(os.getcwd(), backend_filename)),
+        "rm -f %s" % (os.path.join(os.getcwd(), plop_filename)),
     ]
     _run_cmd_lis(cmd_lis)
 
