@@ -360,13 +360,13 @@ def deploy(project_name):
     ]
     _run_cmd_lis(cmd_lis)
 
-    cprint(".. Launching NodeJS app and FCGI apps")
-    _run_apps(project_name, port_no=meteor_port_no)
-
-    cprint(".. Reloading nginx")
+    # cprint(".. Launching NodeJS app and FCGI apps")
+    # _run_apps(project_name, port_no=meteor_port_no)
+    #
+    # cprint(".. Reloading nginx")
 
     return """
-Done! Please set your DNS.
+Done! Please set your DNS. Launch the relevant fcgi and node, then reload nginx.
     """
 
 #-- helper methods --#
