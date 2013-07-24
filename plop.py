@@ -274,7 +274,7 @@ def _prep_nginx_config(project_name):
 
 def _run_apps(project_name, port_no):
     path_to_backend_venv = os.path.join(_backend_path(project_name), "v_env", "bin", "activate")
-    path_to_backend_fcgi = os.path.join(_backend_path(project_name), "web.fcgi")
+    path_to_backend_fcgi = os.path.join(_backend_path(project_name), "src", "web.fcgi")
 
     path_to_plop_venv = os.path.join(_plop_path(project_name), "v_env", "bin", "activate")
     path_to_plop_fcgi = os.path.join(_plop_path(project_name), "web.fcgi")
@@ -365,7 +365,7 @@ def deploy(project_name):
     _run_cmd_lis(cmd_lis)
 
     cprint(".. Launching NodeJS app and FCGI apps")
-    _run_apps(project_name, port_no=)
+    _run_apps(project_name, port_no=meteor_port_no)
 
     cprint(".. Reloading nginx")
 
