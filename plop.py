@@ -31,6 +31,7 @@ def new(project_name):
     put_platform(project_name)
     put_git([plop_path, ios_path, android_path, cfg_path])
     put_sync_file(project_name, common_mobile_folder, ios_path, android_path)
+    setup_backend_cfg(project_name)
 
     cprint("All done.")
 
@@ -583,7 +584,7 @@ def new_cfg_project(project_name):
     return cfg_project_path
 
 
-def _setup_backend_cfg(project_name):
+def setup_backend_cfg(project_name):
     """
     Localise the config files for backend by generating some localised fields for it
     """
@@ -620,7 +621,6 @@ def _link_backend_cfg(backend_path, project_name):
             "ln -s %s" % (os.path.join(cfg_project_path, cfg)),
         ]
         _run_cmd_lis(cmd_lis)
-    _setup_backend_cfg(project_name)
 
 
 def _backend_path(project_name):
