@@ -1,8 +1,10 @@
+import json
+from random import choice
 import uuid
 from bitbucket.bitbucket import Bitbucket
 
 from colorama import init, Fore
-from cfg import WORKSPACE_DIR, PLOP_PROJECT_PATH, WATCHER_FILE_PATH, RESOURCES_PATH, ANDROID_SDK_PATH_LIS, ANDROID_PHONEGAP_BIN_PATH, IOS_PHONEGAP_BIN_PATH, BITBUCKET_USERNAME, BITBUCKET_PASSWD, BACKEND_CFG, PLOP_LIBRARIES
+from cfg import WORKSPACE_DIR, PLOP_PROJECT_PATH, WATCHER_FILE_PATH, RESOURCES_PATH, ANDROID_SDK_PATH_LIS, ANDROID_PHONEGAP_BIN_PATH, IOS_PHONEGAP_BIN_PATH, BITBUCKET_USERNAME, BITBUCKET_PASSWD, BACKEND_CFG, PLOP_LIBRARIES, DICT_FILE, METEOR_PORT_RANGE
 import os
 from manager import Manager
 
@@ -184,6 +186,83 @@ def _deploy_brand_cfg(project_name):
     _run_cmd_lis(cmd_lis)
 
 
+def _compile_platform(project_name):
+    platform_path = _platform_path(project_name)
+    cmd_lis = [
+        "cd %s" % (platform_path),
+        "rm -f app.tgz",
+        "rm -rf bundle",
+        "mrt bundle app.tgz",
+        "tar zxvf app.tgz",
+        "cd bundle/server/node_modules",
+        "rm -r fibers",
+        "npm install fibers@1.0.0",
+    ]
+    _run_cmd_lis(cmd_lis)
+
+
+def _update_nginx_for_flask(plop_file_name, plop_name, project_name, staging_plop_cfg_path):
+    staging = open(staging_plop_cfg_path, "r")
+    staging_material = staging.read()
+    staging = staging % {
+        "proj_name": plop_name,
+        "proj_url": plop_file_name,
+        "proj_path": _plop_path(project_name),
+    }
+    staging.close()
+    staging = open(staging_plop_cfg_path, "w")
+    staging.write(staging_material)
+    staging.close()
+
+
+def _prep_nginx_config(project_name):
+    """
+    Preps the config file for backend, plop and platform
+    """
+    cwd = os.getcwd()
+    meteor_cfg_path = os.path.join(RESOURCES_PATH, "NGINX_CONFIG_FOR_METEOR")
+    flask_cfg_path = os.path.join(RESOURCES_PATH, "NGINX_CONFIG_FOR_FLASK")
+    backend_file_name = "backend.%s.unifide.sg" % (project_name)
+    backend_name = "%%s-backend" % (project_name)
+    platform_file_name = "platform.%s.unifide.sg" % (project_name)
+    platform_name = "%%s-platform" % (project_name)
+    plop_name = "%%s-plop" % (project_name)
+    plop_file_name = "%s.unifide.sg" % (project_name)
+    staging_backend_cfg_path = os.path.join(cwd, backend_file_name)
+    staging_plop_cfg_path = os.path.join(cwd, plop_file_name)
+    staging_platform_cfg_path = os.path.join(cwd, platform_file_name)
+    meteor_port = _get_avail_port()
+
+    #copy cfg to staging
+    cmd_lis = [
+        "cp %s %s" % (flask_cfg_path, staging_backend_cfg_path),
+        "cp %s %s" % (flask_cfg_path, staging_plop_cfg_path),
+        "cp %s %s" % (meteor_cfg_path, staging_platform_cfg_path),
+    ]
+    _run_cmd_lis(cmd_lis)
+
+    #update backend
+    _update_nginx_for_flask(backend_file_name, backend_name, project_name, staging_backend_cfg_path)
+
+    #update plop
+    _update_nginx_for_flask(plop_file_name, plop_name, project_name, staging_plop_cfg_path)
+
+    #update platform
+    staging = open(staging_platform_cfg_path, "r")
+    staging_material = staging.read()
+    staging = staging % {
+        "proj_name": platform_name,
+        "port": meteor_port,
+        "proj_url": platform_file_name,
+    }
+    staging.close()
+    staging = open(staging_platform_cfg_path, "w")
+    staging.write(staging_material)
+    staging.close()
+
+    return backend_file_name, plop_file_name, platform_file_name, meteor_port
+
+
 @manager.command
 def deploy(project_name):
     """
@@ -221,7 +300,33 @@ def deploy(project_name):
     cprint(".. Configuring brand config")
     _deploy_brand_cfg(project_name)
 
+    cprint(".. Compiling Platform into NodeJS app")
+    _compile_platform(project_name)
+
     #nginx setup
+    cprint(".. Preparing nginx site config")
+    backend_filename, plop_filename, platform_filename, meteor_port_no = _prep_nginx_config(project_name)
+
+    cprint(".. Copying and enabling site config")
+    cmd_lis = [
+        "cd %s" % (os.getcwd()),
+        "sudo cp %s /etc/nginx/sites-available/" % (plop_filename),
+        "sudo cp %s /etc/nginx/sites-available" % (backend_filename),
+        "sudo cp %s /etc/nginx/sites-available" % (platform_filename),
+        "cd /etc/nginx/sites-enabled",
+        "sudo ln -s /etc/nginx/sites-available/%s" % (plop_filename),
+        "sudo ln -s /etc/nginx/sites-available/%s" % (backend_filename),
+        "sudo ln -s /etc/nginx/sites-available/%s" % (platform_filename),
+    ]
+    _run_cmd_lis(cmd_lis)
+
+    cprint(".. Launching NodeJS app and FCGI apps")
+
+    cprint(".. Reloading nginx")
+
+    return """
+Done! Please set your DNS.
+    """
 
 #-- helper methods --#
 
@@ -584,6 +689,44 @@ def put_sync_file(project_name, common_mobile_folder, ios_path, android_path):
     new_f.close()
     cprint("Done.")
     return new_sync_file_path
+
+
+def _get_avail_port():
+    used_ports = _get("meteor_used_ports")
+    if used_ports is None: used_ports = []
+
+    avail_ports = filter(lambda x: x not in used_ports, METEOR_PORT_RANGE)
+    chosen_port = choice(avail_ports)
+    used_ports += [chosen_port]
+    _set("meteor_used_ports", used_ports)
+
+    return chosen_port
+
+
+def _release_port(port_no):
+    used_ports = _get("meteor_used_ports")
+    used_ports = filter(lambda x: x != port_no, used_ports)
+    _set("meteor_used_ports", used_ports)
+
+
+def _get(key):
+    f = open(DICT_FILE, "r+")
+    stuff = f.read()
+    d = json.loads(stuff)
+    f.close()
+    return d[key] if key in d else None
+
+
+def _set(key, value):
+    f = open(DICT_FILE, "r+")
+    stuff = f.read()
+    d = json.loads(stuff)
+    f.close()
+
+    d[key] = value
+    f = open(DICT_FILE, "w+")
+    f.write(json.dumps(d))
+    f.close()
 
 
 #-- main --#
