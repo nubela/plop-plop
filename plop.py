@@ -1,5 +1,6 @@
 import json
 from random import choice
+import subprocess
 import uuid
 from bitbucket.bitbucket import Bitbucket
 
@@ -271,6 +272,41 @@ def _prep_nginx_config(project_name):
     return backend_file_name, plop_file_name, platform_file_name, meteor_port
 
 
+def _run_apps(project_name, port_no):
+    path_to_backend_venv = os.path.join(_backend_path(project_name), "v_env", "bin", "activate")
+    path_to_backend_fcgi = os.path.join(_backend_path(project_name), "web.fcgi")
+
+    path_to_plop_venv = os.path.join(_plop_path(project_name), "v_env", "bin", "activate")
+    path_to_plop_fcgi = os.path.join(_plop_path(project_name), "web.fcgi")
+    path_to_meteor_mainjs = os.path.join(_platform_path(project_name), "bundle", "main.js")
+
+    #run backend
+    backend_cmd = ". %(venv)s && python %(fcgi)s" % {
+        "fcgi": path_to_backend_fcgi,
+        "venv": path_to_backend_venv,
+    }
+    backend_cmd_args = backend_cmd.split(" ")
+    backend = subprocess.Popen(backend_cmd_args, stdout=subprocess.PIPE, shell=True)
+
+    #run plop
+    plop_cmd = ". %(venv)s && python %(fcgi)s" % {
+        "fcgi": path_to_plop_fcgi,
+        "venv": path_to_plop_venv,
+    }
+    plop_cmd_args = plop_cmd.split(" ")
+    plop = subprocess.Popen(plop_cmd_args, stdout=subprocess.PIPE, shell=True)
+
+    env = os.environ.copy()
+    env["ROOT_URL"] = "."
+    env["PORT"] = port_no
+    env["MONGO_URL"] = "mongodb://localhost:27017/%s" % (project_name)
+    meteor_cmd = "node %s" % path_to_meteor_mainjs
+    meteor_cmd_args = meteor_cmd.split(" ")
+    meteor = subprocess.Popen(meteor_cmd_args, stdout=subprocess.PIPE, shell=True, env=env)
+
+    return backend.pid, plop.pid, meteor.pid
+
+
 @manager.command
 def deploy(project_name):
     """
@@ -329,6 +365,7 @@ def deploy(project_name):
     _run_cmd_lis(cmd_lis)
 
     cprint(".. Launching NodeJS app and FCGI apps")
+    _run_apps(project_name, port_no=)
 
     cprint(".. Reloading nginx")
 
