@@ -142,15 +142,15 @@ def _deploy_ready_cfg(project_name):
     Update backend's project's cfg.py for deployment
     """
     cfg_project_path = _cfg_proj_path(project_name)
-    platform_url = "http://unifide.%s.unifide.sg" % (project_name)
-    backend_url = "http://backend.%s.unifide.sg" % (project_name)
-    plop_url = "http://%s.unifide.sg/" % (project_name)
+    platform_url = "unifide.%s.unifide.sg" % (project_name)
+    backend_url = "backend.%s.unifide.sg" % (project_name)
+    plop_url = "%s.unifide.sg/" % (project_name)
 
     #update cfg.js
     js_cfg_file_path = os.path.join(cfg_project_path, "cfg.js")
     all_lines = [
-        'BACKEND_URL = "%s/";' % (backend_url),
-        'PLATFORM_URL = "%s/";' % (platform_url),
+        'BACKEND_URL = "http://%s/";' % (backend_url),
+        'PLATFORM_URL = "http://%s/";' % (platform_url),
     ]
     f = open(js_cfg_file_path, "w")
     f.write("\n".join(all_lines))
@@ -603,7 +603,7 @@ def _setup_backend_cfg(project_name):
     backend_cfg_file = os.path.join(cfg_project_path, "cfg.py")
     f = open(backend_cfg_file, "a")
     for l in lines:
-        f.write("%s\n" % (l))
+        f.write("\n%s\n" % (l))
     f.close()
 
 
