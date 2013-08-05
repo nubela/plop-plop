@@ -203,66 +203,40 @@ def _compile_platform(project_name):
     _run_cmd_lis(cmd_lis)
 
 
-def _update_nginx_for_flask(plop_file_name, plop_name, project_name, staging_plop_cfg_path):
-    staging = open(staging_plop_cfg_path, "r")
-    staging_material = staging.read()
-    staging_material = staging_material % {
-        "proj_name": plop_name,
-        "proj_url": plop_file_name,
-        "proj_path": _plop_path(project_name),
-    }
-    staging.close()
-    staging = open(staging_plop_cfg_path, "w")
-    staging.write(staging_material)
-    staging.close()
-
-
 def _prep_nginx_config(project_name):
     """
     Preps the config file for backend, plop and platform
     """
     cwd = os.getcwd()
-    meteor_cfg_path = os.path.join(RESOURCES_PATH, "NGINX_CONFIG_FOR_METEOR")
-    flask_cfg_path = os.path.join(RESOURCES_PATH, "NGINX_CONFIG_FOR_FLASK")
+    meteor_cfg_path = os.path.join(RESOURCES_PATH, "NGINX_PLATFORM_CFG")
+    backend_cfg_path = os.path.join(RESOURCES_PATH, "NGINX_BACKEND_CFG")
+    plop_cfg_path = os.path.join(RESOURCES_PATH, "NGINX_PLOP_CFG")
+
     backend_file_name = "backend.%s.unifide.sg" % (project_name)
-    backend_name = "%s-backend" % (project_name)
     platform_file_name = "platform.%s.unifide.sg" % (project_name)
-    platform_name = "%s-platform" % (project_name)
-    plop_name = "%s-plop" % (project_name)
     plop_file_name = "%s.unifide.sg" % (project_name)
     staging_backend_cfg_path = os.path.join(cwd, backend_file_name)
     staging_plop_cfg_path = os.path.join(cwd, plop_file_name)
     staging_platform_cfg_path = os.path.join(cwd, platform_file_name)
-    meteor_port = _get_avail_port()
 
     #copy cfg to staging
     cmd_lis = [
-        "cp %s %s" % (flask_cfg_path, staging_backend_cfg_path),
-        "cp %s %s" % (flask_cfg_path, staging_plop_cfg_path),
+        "cp %s %s" % (backend_cfg_path, staging_backend_cfg_path),
+        "cp %s %s" % (plop_cfg_path, staging_plop_cfg_path),
         "cp %s %s" % (meteor_cfg_path, staging_platform_cfg_path),
     ]
     _run_cmd_lis(cmd_lis)
 
-    #update backend
-    _update_nginx_for_flask(backend_file_name, backend_name, project_name, staging_backend_cfg_path)
+    files = [staging_plop_cfg_path, staging_backend_cfg_path, staging_platform_cfg_path]
+    for fp in files:
+        f = open(fp,'r')
+        stuff = f.read()
+        f.close()
+        f = open(fp,'w')
+        f.write(stuff % {"project_name": project_name})
+        f.close()
 
-    #update plop
-    _update_nginx_for_flask(plop_file_name, plop_name, project_name, staging_plop_cfg_path)
-
-    #update platform
-    staging = open(staging_platform_cfg_path, "r")
-    staging_material = staging.read()
-    staging_material = staging_material % {
-        "proj_name": platform_name,
-        "port": meteor_port,
-        "proj_url": platform_file_name,
-    }
-    staging.close()
-    staging = open(staging_platform_cfg_path, "w")
-    staging.write(staging_material)
-    staging.close()
-
-    return backend_file_name, plop_file_name, platform_file_name, meteor_port
+    return backend_file_name, plop_file_name, platform_file_name
 
 
 def _run_apps(project_name, port_no):
@@ -300,6 +274,18 @@ def _run_apps(project_name, port_no):
     return backend.pid, plop.pid, meteor.pid
 
 
+def _link_platform_cfg(project_name):
+    platform_path = _platform_path(project_name)
+    lib_path = os.path.join(platform_path, "lib")
+    cfg_project_path = _cfg_proj_path(project_name)
+    cmd_lis = [
+        "cd %s" % (lib_path),
+        "rm -f cfg.js",
+        "ln -s %s" % (os.path.join(cfg_project_path, "cfg.js")),
+    ]
+    _run_cmd_lis(cmd_lis)
+
+
 @manager.command
 def deploy(project_name):
     """
@@ -315,10 +301,11 @@ def deploy(project_name):
     cprint(".. Creating and installing requirements for virtualenv (Backend)")
     backend_path = _backend_path(project_name)
     src_path = os.path.join(backend_path, "src")
+    new_folder(os.path.join(src_path, "resources"))
     _put_venv(backend_path)
     _pip_install(backend_path)
 
-    cprint(".. Creating and installing requirements for virtualenv (Platform)")
+    cprint(".. Creating and installing requirements for virtualenv (plop)")
     plop_path = _plop_path(project_name)
     _put_venv(plop_path)
     _pip_install(plop_path)
@@ -327,9 +314,12 @@ def deploy(project_name):
     _link_plop_libs(plop_path)
     _link_plop_libs(src_path)
 
-    cprint(".. Linking cfg for backend/platform")
+    cprint(".. Linking cfg for backend/plop")
     _link_backend_cfg(src_path, project_name)
     _link_backend_cfg(plop_path, project_name)
+
+    cprint(".. Linking cfg for platform")
+    _link_platform_cfg(project_name)
 
     cprint(".. Updating projects' config")
     _deploy_ready_cfg(project_name)
@@ -342,7 +332,7 @@ def deploy(project_name):
 
     #nginx setup
     cprint(".. Preparing nginx site config")
-    backend_filename, plop_filename, platform_filename, meteor_port_no = _prep_nginx_config(project_name)
+    backend_filename, plop_filename, platform_filename = _prep_nginx_config(project_name)
 
     cprint(".. Copying and enabling site config")
     cmd_lis = [

@@ -1,13 +1,14 @@
 # the IP(s) on which your node server is running. I chose port 3000.
-upstream %(proj_name)s {
-    server 127.0.0.1:%(port)d;
+upstream %(project_name)s-platform {
+    server 127.0.0.1:3003 fail_timeout=0;
 }
 
 # the nginx server instance
 server {
     listen 0.0.0.0:80;
-    server_name %(proj_url)s %(proj_name)s;
-    access_log /var/log/nginx/%(proj_name)s.access.log;
+    server_name platform.%(project_name)s.unifide.sg %(project_name)s-platform;
+
+    access_log /var/log/nginx/%(project_name)s-platform.access.log;
 
     # pass the request to the node.js server with the correct headers and much more can be added, see nginx config options
     location / {
@@ -19,7 +20,8 @@ server {
       proxy_set_header Upgrade $http_upgrade;
       proxy_set_header Connection "upgrade";
 
-      proxy_pass http://%(proj_name)s/;
+      proxy_pass http://%(project_name)s-platform/;
       proxy_redirect off;
+      expires off;
     }
  }

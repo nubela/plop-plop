@@ -1,12 +1,12 @@
 server {
 
   listen  80;
-  server_name %(proj_url)s %(proj_name)s;
+  server_name backend.%(project_name)s.unifide.sg %(project_name)s-backend;
 
-  access_log /var/log/nginx/%(proj_name)s.access.log;
-  error_log /var/log/nginx/%(proj_name)s.error.log info;
+  access_log /var/log/nginx/%(project_name)s-backend.access.log;
+  error_log /var/log/nginx/%(project_name)s-backend.error.log info;
 
-  root %(proj_path)s;
+  root /home/ubuntu/workspace/%(project_name)s/unifide-backend;
 
   location ~* ^.+\.(mpg|avi|mp3|swf|zip|tgz|gz|rar|bz2|doc|xls|exe|ppt|txt|tar|mid|midi|wav|rtf|mpeg)$ {
     access_log off;
@@ -19,7 +19,7 @@ server {
   }
 
   location / {
-    fastcgi_pass unix:%(proj_path)s/fcgi.sock;
+    fastcgi_pass unix:/home/ubuntu/workspace/%(project_name)s/unifide-backend/src/fcgi.sock;
     fastcgi_pass_header Authorization;
     fastcgi_intercept_errors off;
 
@@ -47,4 +47,3 @@ server {
   }
 
 }
-
