@@ -143,6 +143,7 @@ def _clone_deployment_projects(project_name):
         _run_cmd_lis(cmd_lines)
 
 
+@manager.command
 def _deploy_ready_cfg(project_name):
     """
     Update backend's project's cfg.py for deployment
