@@ -1,6 +1,6 @@
 # the IP(s) on which your node server is running. I chose port 3000.
 upstream %(project_name)s-platform {
-    server 127.0.0.1:3003 fail_timeout=0;
+    server 127.0.0.1:%(avail_port)d fail_timeout=0;
 }
 
 # the nginx server instance

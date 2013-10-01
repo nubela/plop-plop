@@ -846,7 +846,7 @@ def _get_avail_port(proj_name):
     port_mapping = _get(DictEnum.AVAIL_PORTS)
     if port_mapping is None: port_mapping = {}
 
-    if proj_name in used_ports:
+    if proj_name in port_mapping:
         return port_mapping[proj_name]
 
     used_ports = [port for _, port in port_mapping.items()]
