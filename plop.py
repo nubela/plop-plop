@@ -860,7 +860,7 @@ def _get_avail_port(proj_name):
 
 
 def _get(key):
-    f = open(DICT_FILE, "w+")
+    f = open(DICT_FILE, "r")
     stuff = f.read()
     try:
         d = json.loads(stuff)
