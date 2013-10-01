@@ -219,7 +219,7 @@ def _prep_nginx_config(project_name):
     Preps the config file for backend, plop and platform
     """
     cwd = os.getcwd()
-    meteor_cfg_path = os.path.join(RESOURCES_PATH, "NGINX_PLATFORM_CFG")
+    platform_cfg_path = os.path.join(RESOURCES_PATH, "NGINX_PLATFORM_CFG")
     backend_cfg_path = os.path.join(RESOURCES_PATH, "NGINX_BACKEND_CFG")
     plop_cfg_path = os.path.join(RESOURCES_PATH, "NGINX_PLOP_CFG")
 
@@ -234,7 +234,7 @@ def _prep_nginx_config(project_name):
     cmd_lis = [
         "cp %s %s" % (backend_cfg_path, staging_backend_cfg_path),
         "cp %s %s" % (plop_cfg_path, staging_plop_cfg_path),
-        "cp %s %s" % (meteor_cfg_path, staging_platform_cfg_path),
+        "cp %s %s" % (platform_cfg_path, staging_platform_cfg_path),
     ]
     _run_cmd_lis(cmd_lis)
 
@@ -244,7 +244,10 @@ def _prep_nginx_config(project_name):
         stuff = f.read()
         f.close()
         f = open(fp, 'w')
-        f.write(stuff % {"project_name": project_name})
+        f.write(stuff % {
+            "project_name": project_name,
+            "avail_port": _get_avail_port(project_name)
+        })
         f.close()
 
     return backend_file_name, plop_file_name, platform_file_name
@@ -841,7 +844,7 @@ def put_sync_file(project_name, common_mobile_folder, ios_path, android_path):
 
 def _get_avail_port(proj_name):
     port_mapping = _get(DictEnum.AVAIL_PORTS)
-    if port_mapping is None: used_ports = {}
+    if port_mapping is None: port_mapping = {}
 
     if proj_name in used_ports:
         return port_mapping[proj_name]
