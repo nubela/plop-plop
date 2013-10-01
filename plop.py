@@ -148,7 +148,7 @@ def _deploy_ready_cfg(project_name):
     Update backend's project's cfg.py for deployment
     """
     cfg_project_path = _cfg_proj_path(project_name)
-    platform_url = "unifide.%s.unifide.sg" % (project_name)
+    platform_url = "platform.%s.unifide.sg" % (project_name)
     backend_url = "backend.%s.unifide.sg" % (project_name)
     plop_url = "%s.unifide.sg/" % (project_name)
 
