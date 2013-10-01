@@ -204,9 +204,10 @@ def _compile_platform(project_name):
         "sudo meteor update",
         "rm -f app.tgz",
         "rm -rf bundle",
+        "rm -rf node_modules",
         "mrt bundle app.tgz",
         "tar zxvf app.tgz",
-        "cd bundle/server/node_modules",
+        "cd bundle/programs/server/node_modules",
         "rm -r fibers",
         "sudo npm install fibers@1.0.0",
     ]
@@ -364,6 +365,16 @@ def deploy(project_name):
 Done! Please set your DNS. Launch the relevant fcgi and node, then reload nginx.
     """
 
+
+@manager.command
+def compile(project_name):
+    """
+    (This command should be executed in the production machine)
+    Compiles the platform into a nodejs executable
+    """
+    _compile_platform(project_name)
+
+
 @manager.command
 def reload(project_name):
     """
@@ -395,6 +406,7 @@ def run(project_name):
     cprint("Running..")
     backend_path = _backend_path(project_name)
     plop_path = _plop_path(project_name)
+    platform_path = _platform_path(project_name)
     plop_screen = Screen("%s-plop" % (project_name))
     platform_screen = Screen("%s-platform" % (project_name))
     backend_screen = Screen("%s-backend" % (project_name))
@@ -422,8 +434,17 @@ def run(project_name):
         "python web.fcgi"
     )
 
-    cprint(".. Done.")
+    cprint(".. Initializing platform")
+    platform_screen.initialize()
+    platform_screen.send_commands(
+        "cd %s" % (platform_path),
+        "ROOT_URL=http://platform.%(proj_name)s.unifide.sg PORT=%(avail_port)d MONGO_URL=mongodb://localhost:27017/%(proj_name)s node bundle/main.js" % {
+            "avail_port": _get_avail_port(project_name),
+            "proj_name": project_name,
+        },
+    )
 
+    cprint(".. Done.")
 
 
 #-- helper methods --#
