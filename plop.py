@@ -8,9 +8,14 @@ from colorama import init, Fore
 from cfg import WORKSPACE_DIR, PLOP_PROJECT_PATH, WATCHER_FILE_PATH, RESOURCES_PATH, ANDROID_SDK_PATH_LIS, ANDROID_PHONEGAP_BIN_PATH, IOS_PHONEGAP_BIN_PATH, BITBUCKET_USERNAME, BITBUCKET_PASSWD, BACKEND_CFG, PLOP_LIBRARIES, DICT_FILE, METEOR_PORT_RANGE
 import os
 from manager import Manager
+from screenutils.screen import Screen
 
 
 manager = Manager()
+
+
+class DictEnum:
+    AVAIL_PORTS = "avail_ports"
 
 
 @manager.command
@@ -152,6 +157,9 @@ def _deploy_ready_cfg(project_name):
     all_lines = [
         'BACKEND_URL = "http://%s/";' % (backend_url),
         'PLATFORM_URL = "http://%s/";' % (platform_url),
+        'UPLOAD_RELATIVE_ENDPOINT = "resources"',
+        'CLOUDFRONT_URL = "http://d1boersyg287yp.cloudfront.net/"',
+        'UPLOAD_METHOD = "local" //or s3',
     ]
     f = open(js_cfg_file_path, "w")
     f.write("\n".join(all_lines))
@@ -192,13 +200,15 @@ def _compile_platform(project_name):
     platform_path = _platform_path(project_name)
     cmd_lis = [
         "cd %s" % (platform_path),
+        "sudo mrt update",
+        "sudo meteor update",
         "rm -f app.tgz",
         "rm -rf bundle",
         "mrt bundle app.tgz",
         "tar zxvf app.tgz",
         "cd bundle/server/node_modules",
         "rm -r fibers",
-        "npm install fibers@1.0.0",
+        "sudo npm install fibers@1.0.0",
     ]
     _run_cmd_lis(cmd_lis)
 
@@ -229,10 +239,10 @@ def _prep_nginx_config(project_name):
 
     files = [staging_plop_cfg_path, staging_backend_cfg_path, staging_platform_cfg_path]
     for fp in files:
-        f = open(fp,'r')
+        f = open(fp, 'r')
         stuff = f.read()
         f.close()
-        f = open(fp,'w')
+        f = open(fp, 'w')
         f.write(stuff % {"project_name": project_name})
         f.close()
 
@@ -350,14 +360,53 @@ def deploy(project_name):
     ]
     _run_cmd_lis(cmd_lis)
 
-    # cprint(".. Launching NodeJS app and FCGI apps")
-    # _run_apps(project_name, port_no=meteor_port_no)
-    #
-    # cprint(".. Reloading nginx")
-
     return """
 Done! Please set your DNS. Launch the relevant fcgi and node, then reload nginx.
     """
+
+
+@manager.command
+def run(project_name):
+    cprint("Running..")
+    backend_path = _backend_path(project_name)
+    plop_path = _plop_path(project_name)
+    plop_screen = Screen("%s-plop" % (project_name))
+    platform_screen = Screen("%s-platform" % (project_name))
+    backend_screen = Screen("%s-backend" % (project_name))
+
+    #kill the screens
+    cprint(".. Killing screens")
+    screens = [plop_screen, platform_screen, backend_screen]
+    for s in screens: s.kill() if s.exists else None
+
+    #initiate plop
+    cprint(".. Initializing plop")
+    plop_screen.initialize()
+    plop_screen.send_commands(
+        "cd %s" % (plop_path),
+        ". v_env/bin/activate",
+        "python web.fcgi"
+    )
+    _run_cmd_lis([
+        "cd %s" % (plop_path),
+        "chmod 777 fcgi.sock",
+    ])
+
+    cprint(".. Initializing backend")
+    backend_screen.initialize()
+    plop_screen.send_commands(
+        "cd %s" % (backend_path),
+        ". v_env/bin/activate",
+        "cd %s" % (os.path.join(backend_path, "src")),
+        "python web.fcgi"
+    )
+    _run_cmd_lis([
+        "cd %s" % (os.path.join(backend_path, "src")),
+        "chmod 777 fcgi.sock",
+    ])
+
+    cprint(".. Done.")
+
 
 #-- helper methods --#
 
@@ -674,7 +723,8 @@ def put_platform(project_name):
 
     #setup RunMeteor file
     cprint(".. Setting up RunMeteor")
-    str = "PORT=3000 MONGO_URL=mongodb://localhost:27017/%s ROOT_URL=. meteor run" % (project_name)
+    str = "PORT=%d MONGO_URL=mongodb://localhost:27017/%s ROOT_URL=http://platform.%s.unifide.sg meteor run" % (
+        _get_avail_port(project_name), project_name, project_name)
     run_meteor_file_path = os.path.join(platform_path, "RunMeteor")
     run_meteor_file = open(run_meteor_file_path, "w")
     run_meteor_file.write(str)
@@ -721,22 +771,20 @@ def put_sync_file(project_name, common_mobile_folder, ios_path, android_path):
     return new_sync_file_path
 
 
-def _get_avail_port():
-    used_ports = _get("meteor_used_ports")
-    if used_ports is None: used_ports = []
+def _get_avail_port(proj_name):
+    port_mapping = _get(DictEnum.AVAIL_PORTS)
+    if port_mapping is None: used_ports = {}
 
+    if proj_name in used_ports:
+        return port_mapping[proj_name]
+
+    used_ports = [port for _, port in port_mapping.items()]
     avail_ports = filter(lambda x: x not in used_ports, METEOR_PORT_RANGE)
     chosen_port = choice(avail_ports)
-    used_ports += [chosen_port]
-    _set("meteor_used_ports", used_ports)
+    port_mapping[proj_name] = chosen_port
+    _set(DictEnum.AVAIL_PORTS, port_mapping)
 
     return chosen_port
-
-
-def _release_port(port_no):
-    used_ports = _get("meteor_used_ports")
-    used_ports = filter(lambda x: x != port_no, used_ports)
-    _set("meteor_used_ports", used_ports)
 
 
 def _get(key):
