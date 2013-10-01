@@ -415,7 +415,7 @@ def run(project_name):
 
     cprint(".. Initializing backend")
     backend_screen.initialize()
-    plop_screen.send_commands(
+    backend_screen.send_commands(
         "cd %s" % (backend_path),
         ". v_env/bin/activate",
         "cd %s" % (os.path.join(backend_path, "src")),
