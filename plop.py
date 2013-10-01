@@ -297,6 +297,34 @@ def _link_platform_cfg(project_name):
     _run_cmd_lis(cmd_lis)
 
 
+def _cp_nginx_cfg(backend_filename, platform_filename, plop_filename):
+    cmd_lis = [
+        "cd %s" % (os.getcwd()),
+
+        "sudo rm -f /etc/nginx/sites-enabled/%s" % (plop_filename),
+        "sudo rm -f /etc/nginx/sites-enabled/%s" % (backend_filename),
+        "sudo rm -f /etc/nginx/sites-enabled/%s" % (platform_filename),
+
+        "sudo rm -f /etc/nginx/sites-available/%s" % (plop_filename),
+        "sudo rm -f /etc/nginx/sites-available/%s" % (backend_filename),
+        "sudo rm -f /etc/nginx/sites-available/%s" % (platform_filename),
+
+        "sudo cp %s /etc/nginx/sites-available/" % (plop_filename),
+        "sudo cp %s /etc/nginx/sites-available" % (backend_filename),
+        "sudo cp %s /etc/nginx/sites-available" % (platform_filename),
+
+        "cd /etc/nginx/sites-enabled",
+        "sudo ln -s /etc/nginx/sites-available/%s" % (plop_filename),
+        "sudo ln -s /etc/nginx/sites-available/%s" % (backend_filename),
+        "sudo ln -s /etc/nginx/sites-available/%s" % (platform_filename),
+
+        "rm -f %s" % (os.path.join(os.getcwd(), platform_filename)),
+        "rm -f %s" % (os.path.join(os.getcwd(), backend_filename)),
+        "rm -f %s" % (os.path.join(os.getcwd(), plop_filename)),
+    ]
+    _run_cmd_lis(cmd_lis)
+
+
 @manager.command
 def deploy(project_name):
     """
@@ -346,24 +374,25 @@ def deploy(project_name):
     backend_filename, plop_filename, platform_filename = _prep_nginx_config(project_name)
 
     cprint(".. Copying and enabling site config")
-    cmd_lis = [
-        "cd %s" % (os.getcwd()),
-        "sudo cp %s /etc/nginx/sites-available/" % (plop_filename),
-        "sudo cp %s /etc/nginx/sites-available" % (backend_filename),
-        "sudo cp %s /etc/nginx/sites-available" % (platform_filename),
-        "cd /etc/nginx/sites-enabled",
-        "sudo ln -s /etc/nginx/sites-available/%s" % (plop_filename),
-        "sudo ln -s /etc/nginx/sites-available/%s" % (backend_filename),
-        "sudo ln -s /etc/nginx/sites-available/%s" % (platform_filename),
-        "rm -f %s" % (os.path.join(os.getcwd(), platform_filename)),
-        "rm -f %s" % (os.path.join(os.getcwd(), backend_filename)),
-        "rm -f %s" % (os.path.join(os.getcwd(), plop_filename)),
-    ]
-    _run_cmd_lis(cmd_lis)
+    _cp_nginx_cfg(backend_filename, platform_filename, plop_filename)
 
     return """
 Done! Please set your DNS. Launch the relevant fcgi and node, then reload nginx.
     """
+
+
+@manager.command
+def configure(project_name):
+    """
+    (This command should be executed in the production machine)
+    Preps and copies over the config file for a project name
+    """
+    cprint("Preparing nginx site config")
+    backend_filename, plop_filename, platform_filename = _prep_nginx_config(project_name)
+
+    cprint(".. Copying and enabling site config")
+    _cp_nginx_cfg(backend_filename, platform_filename, plop_filename)
+    cprint("Done.")
 
 
 @manager.command
