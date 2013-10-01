@@ -364,6 +364,22 @@ def deploy(project_name):
 Done! Please set your DNS. Launch the relevant fcgi and node, then reload nginx.
     """
 
+def reload(project_name):
+    backend_path = _backend_path(project_name)
+    plop_path = _plop_path(project_name)
+    _run_cmd_lis([
+        "cd %s" % (plop_path),
+        "chmod 777 fcgi.sock",
+    ])
+    _run_cmd_lis([
+        "cd %s" % (os.path.join(backend_path, "src")),
+        "chmod 777 fcgi.sock",
+    ])
+    _run_cmd_lis([
+        'sudo nginx -s reload',
+    ])
+    cprint("Done.")
+
 
 @manager.command
 def run(project_name):
@@ -387,10 +403,6 @@ def run(project_name):
         ". v_env/bin/activate",
         "python web.fcgi"
     )
-    _run_cmd_lis([
-        "cd %s" % (plop_path),
-        "chmod 777 fcgi.sock",
-    ])
 
     cprint(".. Initializing backend")
     backend_screen.initialize()
@@ -400,12 +412,9 @@ def run(project_name):
         "cd %s" % (os.path.join(backend_path, "src")),
         "python web.fcgi"
     )
-    _run_cmd_lis([
-        "cd %s" % (os.path.join(backend_path, "src")),
-        "chmod 777 fcgi.sock",
-    ])
 
     cprint(".. Done.")
+
 
 
 #-- helper methods --#
