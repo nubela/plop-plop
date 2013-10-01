@@ -364,7 +364,12 @@ def deploy(project_name):
 Done! Please set your DNS. Launch the relevant fcgi and node, then reload nginx.
     """
 
+@manager.command
 def reload(project_name):
+    """
+    (This command should be executed in the production machine)
+    Reloads the Nginx server
+    """
     backend_path = _backend_path(project_name)
     plop_path = _plop_path(project_name)
     _run_cmd_lis([
@@ -383,6 +388,10 @@ def reload(project_name):
 
 @manager.command
 def run(project_name):
+    """
+    (This command should be executed in the production machine)
+    Runs the screen commands for the project
+    """
     cprint("Running..")
     backend_path = _backend_path(project_name)
     plop_path = _plop_path(project_name)
