@@ -126,7 +126,7 @@ def push(project_name):
     cprint("Done.\n")
 
 
-def _clone_deployment_projects(project_name):
+def _clone_deployment_projects(project_name, branch=None):
     git_repos = [
         "git@bitbucket.org:unifide/%s-cfg.git" % (project_name),
         "git@bitbucket.org:unifide/%s-plop.git" % (project_name),
@@ -139,6 +139,10 @@ def _clone_deployment_projects(project_name):
             "cd %s" % (proj_workspace),
             "git clone %s" % (repo),
         ]
+        if branch is not None:
+            cmd_lines += [
+                "git fetch && git checkout %s" % branch,
+            ]
         cprint(".. Cloning %s" % (repo))
         _run_cmd_lis(cmd_lines)
 

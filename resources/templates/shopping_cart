@@ -1,0 +1,29 @@
+#let's first get the order object
+order_obj = _session_to_order()
+_update_user(order_obj)
+
+#update and apply debits
+all_discounts = apply_discounts(order_obj)
+coupon_debit = _update_coupon(order_obj)
+use_cashback = request.form.get("use_cashback", False)
+if use_cashback == "true":
+	apply_cashback(order_obj)
+
+#update credits
+selected_shipping_method_id = request.form.get("shipping_rule_id")
+apply_shipping(order_obj, selected_shipping_method_id)
+apply_tax(order_obj)
+
+#vars for rendering template
+coupon_amount = sum(map(lambda x: x["amount"], coupon_debit))
+discount_amount = sum(map(lambda x: x["amount"], all_discounts))
+all_items = map(lambda x: (items.get(x["obj_id"]), x["quantity"]), order_obj.items)
+cashback_rule = cashbacks.get()
+cashback_amt = cashbacks.cashback_value(cashback_rule) if cashback_rule is not None else 0
+shipping_avail = shipping.get_all()
+shipping_opts = {}
+for s in shipping_avail:
+	shipping_opts[s] = shipping.cost(s, order_obj)
+
+#let's save the updated order back into the session
+_order_to_session(order_obj)

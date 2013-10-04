@@ -1,0 +1,1 @@
+return _render_template("{{template_name}}.html", **{{dic_name}})
