@@ -1,0 +1,22 @@
+{{description}}
+
+1.	Log into the Unifide platform (see How to access the Unifide Platform)
+2.	Navigate to the items module for to the “{{path_lis}}” container (see Managing items)
+3.  From this container, you can navigate amongst other {{container_plural}} by navigating to child containers on the left.
+4.  To create new {{item_plural}}, ensure that you have navigated to the correct child container. Then create new items with the follow attributes:
+
+	{% for a in attr %}
+	{{a.0}} -- {{a.1}}
+	{% endfor %}
+
+	And then add the following custom media attributes:
+
+	{% for a in media_attr %}
+	{{a.0}} -- {{a.1}}
+	{% endfor %}
+
+	And then add the following custom attributes:
+
+	{% for a in custom_attr %}
+	{{a.0}} -- {{a.1}}
+	{% endfor %}

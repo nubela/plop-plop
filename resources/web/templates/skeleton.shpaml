@@ -6,8 +6,17 @@ html
         {% include "imports.html" %}
 
     body
-        {% block body %}
-        Hello World
-        {% endblock %}
-        {% block footer %}
-        {% endblock %}
+
+        #wrap
+            {% block body %}
+            .container
+                Hello World
+            {% endblock %}
+            <div id="push"></div>
+
+        footer#footer
+            {% block footer %}
+            .container
+                p.text-muted.credit
+                    footer
+            {% endblock %}

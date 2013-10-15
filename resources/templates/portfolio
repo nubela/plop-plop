@@ -1,0 +1,25 @@
+#get mode
+if path is None:
+	path = ""
+path_split = filter(lambda x: len(x) > 0, path.split("/"))
+view_item_mode = len(path_split) >= 2 and path_split[0] == "view"
+
+#vars
+{{id}}_base_container_path_lis = {{container_path_lis}}
+{{id}}_all_items = []
+{{id}}_base_container = items.container_from_path({{id}}_base_container_path_lis)
+{{id}}_container_of_choice = {{id}}_base_container
+
+#browse container mode
+if not view_item_mode:
+	if len(path_split) >= 2:
+		container_name_slug = path_split[-1]
+		container_obj = slugs.get_obj_from_slug(container_name_slug, items.Container)
+		{{id}}_container_of_choice = container_obj if container_obj is not None else {{id}}_container_of_choice
+	{{id}}_all_items = items.get_all(container_of_choice)
+
+else:
+	item_slug_name = path_split[-1]
+	{{id}}_item_of_choice = slugs.get_obj_from_slug(item_slug_name, items.Item)
+	{{id}}_container_of_choice = items.container({{id}}_item_of_choice)
+	{{id}}_all_items += [{{id}}_item_of_choice]

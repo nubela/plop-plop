@@ -1,0 +1,5 @@
+{{description}}
+
+1.	Log into the Unifide platform (see How to access the Unifide Platform)
+2.	Navigate to the items module for to the “{{path_lis}}” container (see Managing items)
+3.  To add more {{plural_item}}, simply create a new container with a relevant name.

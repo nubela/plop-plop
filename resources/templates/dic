@@ -1,0 +1,4 @@
+dic = {
+    {% for v in vars %}"{{v}}": {{v}},
+    {% endfor %}
+}

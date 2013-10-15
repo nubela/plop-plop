@@ -1,0 +1,2 @@
+{{id}}_tag_name = None
+{{id}}_all_items = tags.get_all(items.Item, {{id}}_tag_name)

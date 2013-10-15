@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="icon" type="image/png" href="/media/imgs/favicon.png" />
+        <title>Hello World</title>
+        {% include "imports.html" %}
+    </head>
+
+    <body>
+
+        <div id="wrap">
+            {% block body %}
+            <div class="container">
+                Hello World
+            </div>
+            {% endblock %}
+            <div id="push"></div>
+        </div>
+
+        <footer id="footer">
+            {% block footer %}
+            <div class="container">
+                <p class="text-muted credit">
+                    footer
+                </p>
+            </div>
+            {% endblock %}
+        </footer>
+    </body>
+</html>

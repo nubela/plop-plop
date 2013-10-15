@@ -1,0 +1,4 @@
+#-- simple --#
+{{id}}_container_path_lis = {{container_path_lis}}
+{{id}}_container_obj = items.container_from_path({{id}}_container_path_lis)
+{{id}}_all_items = items.get_all({{id}}_container_obj)
