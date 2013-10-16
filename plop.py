@@ -3,9 +3,10 @@ from random import choice
 import subprocess
 import uuid
 from bitbucket.bitbucket import Bitbucket
+from boto.s3.connection import S3Connection
 
 from colorama import init, Fore
-from cfg import WORKSPACE_DIR, PLOP_PROJECT_PATH, WATCHER_FILE_PATH, RESOURCES_PATH, ANDROID_SDK_PATH_LIS, ANDROID_PHONEGAP_BIN_PATH, IOS_PHONEGAP_BIN_PATH, BITBUCKET_USERNAME, BITBUCKET_PASSWD, BACKEND_CFG, PLOP_LIBRARIES, DICT_FILE, METEOR_PORT_RANGE
+from cfg import WORKSPACE_DIR, PLOP_PROJECT_PATH, WATCHER_FILE_PATH, RESOURCES_PATH, ANDROID_SDK_PATH_LIS, ANDROID_PHONEGAP_BIN_PATH, IOS_PHONEGAP_BIN_PATH, BITBUCKET_USERNAME, BITBUCKET_PASSWD, BACKEND_CFG, PLOP_LIBRARIES, DICT_FILE, METEOR_PORT_RANGE, AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID
 import os
 from manager import Manager
 from screenutils.screen import Screen
@@ -384,6 +385,8 @@ def deploy(project_name):
     cprint(".. Copying and enabling site config")
     _cp_nginx_cfg(backend_filename, platform_filename, plop_filename)
 
+    create_s3_bucket(project_name)
+
     return """
 Done! Please set your DNS. Launch the relevant fcgi and node, then reload nginx.
     """
@@ -432,6 +435,39 @@ def reload(project_name):
         'sudo nginx -s reload',
     ])
     cprint("Done.")
+
+
+@manager.command
+def clear_s3_bucket(project_name):
+    """
+    DO NOT FUCKING USE THIS COMMMAND WITHOUT THE EXPLICIT PERMISSION FROM STEVEN.
+    IF USED WRONGLY, THIS WIPES OUT ALL DATA FROM A GIVEN CLIENT.
+
+    But anyways, this method wipes out all the files in an S3 bucket.
+    ** Not to be taken lightly **
+    """
+    cprint("Clearing S3 bucket..")
+    conn = S3Connection(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+    bucket = conn.get_bucket(project_name)
+    bucket_list_result_set = bucket.list()
+    bucket.delete_keys([key.name for key in bucket_list_result_set])
+    cprint("Done. Cleared '%s' bucket" % (project_name))
+
+
+@manager.command
+def create_s3_bucket(project_name):
+    """
+    Creates a bucket in Amazon S3
+    """
+    cprint("Creating S3 bucket..")
+    conn = S3Connection(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+    all_bucket_obj = conn.get_all_buckets()
+    all_bucket_names = map(lambda x: x.name, all_bucket_obj)
+    if project_name in all_bucket_names:
+        cprint("Bucket already created.")
+        return
+    conn.create_bucket(project_name)
+    cprint("Done. Created '%s' bucket" % (project_name))
 
 
 @manager.command
@@ -699,6 +735,9 @@ def setup_backend_cfg(project_name):
     Localise the config files for backend by generating some localised fields for it
     """
     lines = []
+
+    #S3_BUCKET_NAME = "{{BUCKET_NAME}}"
+    lines += ["S3_BUCKET_NAME = '%s'" % (project_name)]
 
     #secret key -> SECRET_KEY = "b4ef3a73-5d52-11e2-9b58-14109feb3038"
     secret_key = _generate_uuid()

@@ -86,9 +86,8 @@ GOOGLE_PASSWD_ENCODED = 'BZh91AY&SYE\xf2\x04j\x00\x00\x08\x81\x80*e\x9e\x00 \x00
 #amazon s3
 AWS_ACCESS_KEY_ID = 'AKIAIYOWWMY2JWOT7YAA'
 AWS_SECRET_ACCESS_KEY = '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'
-S3_BUCKET_NAME = "ctrleff"
 S3_BUCKET_CHECK = False
-S3_KEY_NAME = "ctrleff"
+S3_KEY_NAME = "unifide"
 S3_LOCATION = S3.Location.SG
 CLOUDFRONT_URL = "http://d1boersyg287yp.cloudfront.net/"
 
