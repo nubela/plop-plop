@@ -1,7 +1,10 @@
 Jinja2==2.7.1
 MarkupSafe==0.18
+Pygments==1.6
 Unidecode==0.04.13
 bitbucket-api==0.4.4
+boto==2.14.0
+bpython==0.12
 clint==0.3.1
 colorama==0.2.5
 envoy==0.0.2
