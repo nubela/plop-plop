@@ -6,3 +6,4 @@ validate_email==1.1
 unidecode==0.04.12
 py-lorem==1.2
 pil==1.1.7
+boto==2.14.0

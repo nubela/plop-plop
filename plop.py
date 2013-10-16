@@ -459,6 +459,7 @@ def create_s3_bucket(project_name):
     """
     Creates a bucket in Amazon S3
     """
+    project_name = "unifide-%s" % (project_name)
     cprint("Creating S3 bucket..")
     conn = S3Connection(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
     all_bucket_obj = conn.get_all_buckets()
@@ -737,7 +738,7 @@ def setup_backend_cfg(project_name):
     lines = []
 
     #S3_BUCKET_NAME = "{{BUCKET_NAME}}"
-    lines += ["S3_BUCKET_NAME = '%s'" % (project_name)]
+    lines += ["S3_BUCKET_NAME = 'unifide-%s'" % (project_name)]
 
     #secret key -> SECRET_KEY = "b4ef3a73-5d52-11e2-9b58-14109feb3038"
     secret_key = _generate_uuid()
