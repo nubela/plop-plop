@@ -127,12 +127,52 @@ def push(project_name):
     cprint("Done.\n")
 
 
+@manager.command
+def clone(project_name):
+    """
+    Clones a project from repository to own local computer for dev purposes
+    """
+    cprint("Cloning..")
+
+    cprint(".. Cloning projects")
+    _clone_deployment_projects(project_name)
+
+    cprint(".. Creating and installing requirements for virtualenv (Backend)")
+    backend_path = _backend_path(project_name)
+    src_path = os.path.join(backend_path, "src")
+    new_folder(os.path.join(src_path, "resources"))
+    _put_venv(backend_path)
+    _pip_install(backend_path)
+
+    cprint(".. Creating and installing requirements for virtualenv (plop)")
+    plop_path = _plop_path(project_name)
+    _put_plop_watcher(plop_path)
+    _put_venv(plop_path)
+    _pip_install(plop_path)
+
+    cprint(".. Linking libraries from plop")
+    _link_plop_libs(plop_path)
+    _link_plop_libs(src_path)
+
+    cprint(".. Linking cfg for backend/plop")
+    _link_backend_cfg(src_path, project_name)
+    _link_backend_cfg(plop_path, project_name)
+
+    cprint(".. Linking cfg for platform")
+    _link_platform_cfg(project_name)
+
+    cprint(".. Configuring brand config")
+    _deploy_brand_cfg(project_name)
+
+    cprint(".. Done.")
+
+
 def _clone_deployment_projects(project_name, branch=None):
     git_repos = [
-        "git@bitbucket.org:unifide/%s-cfg.git" % (project_name),
-        "git@bitbucket.org:unifide/%s-plop.git" % (project_name),
-        "git@bitbucket.org:kianwei/unifide-platform.git",
-        "git@bitbucket.org:kianwei/unifide-backend.git",
+        "git@bitbucket2.org:unifide/%s-cfg.git" % (project_name),
+        "git@bitbucket2.org:unifide/%s-plop.git" % (project_name),
+        "git@bitbucket2.org:kianwei/unifide-platform.git",
+        "git@bitbucket2.org:kianwei/unifide-backend.git",
     ]
     proj_workspace = _proj_workspace(project_name)
     for repo in git_repos:

@@ -4,6 +4,7 @@ from base import S3
 #-- UPDATE THIS SECTION --#
 
 DOMAIN = "http://localhost:5000"
+PLOP_URL = "http://localhost:5001"
 
 #-- things below should not be touched unless you know what you are doing (sane defaults) --#
 
@@ -58,6 +59,12 @@ API_TO_REGISTER = (
     "items",
     "business",
     "order",
+    "discount",
+    "coupon",
+    "cashback",
+    "taxes",
+    "shipping",
+    "inventory",
 )
 
 #facebook app info
@@ -112,5 +119,19 @@ CAMPAIGN_TYPE = [
     "web",
     "blog"
 ]
+
+# PAYPAL_CONFIG = {"API_USERNAME": "hello_api1.swallowlead.com",
+#                  "API_PASSWORD": "PNYQTH8S49YRD64K",
+#                  "API_SIGNATURE": "AFcWxV21C7fd0v3bYYYRCpSSRl31A3sfVaPFlal2o2-3tzxmOefyCvz7",
+#                  "DEBUG_LEVEL": 0,
+#                  "API_ENVIRONMENT": 'PRODUCTION',
+# }
+
+PAYPAL_CONFIG = {"API_USERNAME": "nubelaavery2_api1.gmail.com",
+                 "API_PASSWORD": "1363027130",
+                 "API_SIGNATURE": "AKdEyCmIgTqx4G-LVsumNt8ElkfkAWYiOeRlSXTxYcjp9n.BY0Ki7AZf",
+                 "DEBUG_LEVEL": 0,
+                 "API_ENVIRONMENT": 'SANDBOX',
+}
 
 #-- configuration below are generated automatically by script --#
