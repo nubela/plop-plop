@@ -6,7 +6,9 @@ from bitbucket.bitbucket import Bitbucket
 from boto.s3.connection import S3Connection
 
 from colorama import init, Fore
-from cfg import WORKSPACE_DIR, PLOP_PROJECT_PATH, WATCHER_FILE_PATH, RESOURCES_PATH, ANDROID_SDK_PATH_LIS, ANDROID_PHONEGAP_BIN_PATH, IOS_PHONEGAP_BIN_PATH, BITBUCKET_USERNAME, BITBUCKET_PASSWD, BACKEND_CFG, PLOP_LIBRARIES, DICT_FILE, METEOR_PORT_RANGE, AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID
+from cfg import WORKSPACE_DIR, PLOP_PROJECT_PATH, WATCHER_FILE_PATH, RESOURCES_PATH, ANDROID_SDK_PATH_LIS, \
+    ANDROID_PHONEGAP_BIN_PATH, IOS_PHONEGAP_BIN_PATH, BITBUCKET_USERNAME, BITBUCKET_PASSWD, BACKEND_CFG, \
+    PLOP_LIBRARIES, DICT_FILE, METEOR_PORT_RANGE, AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID
 import os
 from manager import Manager
 from screenutils.screen import Screen
@@ -17,6 +19,39 @@ manager = Manager()
 
 class DictEnum:
     AVAIL_PORTS = "avail_ports"
+
+
+@manager.command
+def new_android_app(project_name):
+    """
+    Generates a new android project
+    """
+    common_mobile_folder = os.path.join(_proj_workspace(project_name), "%s-www" % (project_name))
+    android_path = new_android_project(project_name, common_mobile_folder)
+    put_git([android_path])
+    cprint("Done.")
+
+
+@manager.command
+def new_ios_app(project_name):
+    """
+    Generates a new iOS project
+    """
+    common_mobile_folder = os.path.join(_proj_workspace(project_name), "%s-www" % (project_name))
+    ios_path = new_ios_project(project_name, common_mobile_folder)
+    put_git([ios_path])
+    cprint("Done.")
+
+
+@manager.command
+def new_plop(project_name, plop_name):
+    """
+    Generates a new PLOP project in a project folder
+    """
+    proj_path = os.path.join(_proj_workspace(project_name), plop_name)
+    plop_path = new_plop_project(project_name, proj_path)
+    put_git([plop_path])
+    cprint("All done.")
 
 
 @manager.command
@@ -552,7 +587,8 @@ def run(project_name):
     platform_screen.initialize()
     platform_screen.send_commands(
         "cd %s" % (platform_path),
-        "ROOT_URL=http://platform.%(proj_name)s.unifide.sg PORT=%(avail_port)d MONGO_URL=mongodb://localhost:27017/%(proj_name)s node bundle/main.js" % {
+        "ROOT_URL=http://platform.%(proj_name)s.unifide.sg PORT=%(avail_port)d MONGO_URL=mongodb://localhost:27017/%("
+        "proj_name)s node bundle/main.js" % {
             "avail_port": _get_avail_port(project_name),
             "proj_name": project_name,
         },
@@ -632,11 +668,11 @@ def _pip_install(proj_path):
     _run_cmd_lis(pip_install_cmd_lis)
 
 
-def new_plop_project(project_name):
+def new_plop_project(project_name, proj_path=None):
     cprint("Working on plop..")
 
     #create folder
-    proj_path = _plop_path(project_name)
+    proj_path = _plop_path(project_name) if proj_path is None else proj_path
     cmd_lis = [
         "cd %s" % (RESOURCES_PATH),
         "cp -R %s %s" % ("plop_proj", proj_path),
@@ -677,12 +713,10 @@ def new_android_project(project_name, www_folder):
     os.system(str_of_cmds)
 
     #replace www
-    cprint(".. Replacing www")
-    www_folder_path = os.path.join(proj_path, "assets", "www")
+    cprint(".. Adding gitngore")
     cmd_lis = [
-        "rm -rf %s" % (www_folder_path),
-        "cd %s" % (proj_path),
-        "ln -s %s" % (www_folder),
+        "cd %s" % (RESOURCES_PATH),
+        "cp %s %s" % ("gitignore_for_mobile", os.path.join(proj_path, ".gitignore")),
     ]
     _run_cmd_lis(cmd_lis)
 
@@ -703,16 +737,10 @@ def new_ios_project(project_name, www_folder):
         "./create %s %s %s" % (
             proj_path, "com.unifide.%s" % (project_name), project_name)
     ]
-    str_of_cmds = " && ".join(commands)
-    os.system(str_of_cmds)
+    _run_cmd_lis(commands)
 
-    #replace www
-    cprint(".. Replacing www")
-    www_folder_path = os.path.join(proj_path, "www")
+    cprint(".. Adding gitignore")
     cmd_lis = [
-        "rm -rf %s" % (www_folder_path),
-        "cd %s" % (proj_path),
-        "ln -s %s" % (www_folder),
         "cd %s" % (RESOURCES_PATH),
         "cp %s %s" % ("gitignore_for_mobile", os.path.join(proj_path, ".gitignore")),
     ]

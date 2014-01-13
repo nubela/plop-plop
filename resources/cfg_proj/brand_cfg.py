@@ -8,6 +8,11 @@ CAMPAIGN_CHANNELS = [
     CampaignChannels.FOURSQUARE,
 ]
 
+USER_GROUPS = {
+    "admin": "Admin group",
+    "normal": "Normal users",
+}
+
 BRAND_MENU = [
     {"order": 0,
      "name": "OVERVIEW",

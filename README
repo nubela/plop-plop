@@ -1,0 +1,28 @@
+[Instructions to get plop-plop running]
+
+1. Install dependencies
+=======================
+
+- Install virtualenv
+- Install pip
+- Install phonegap 2.7
+- Install Android SDK
+- Install transcompiler-watcher (https://github.com/nubela/transcompiler-watcher)
+$ virtualenv v_env
+$ source v_env/bin/activate #this will activate the jailed environment
+$ pip install -r REQUIREMENTS
+$ cp _cfg.py cfg.py #copy config template
+$ vi cfg.py
+
+
+2. How to use plop-plop
+=======================
+
+(To create a new project)
+
+$ source v_env/bin/activate
+$ python plop.py new <PROJECT_NAME>
+
+(Create the bitbucket repositories)
+
+$ python plop.py add_repo <PROJECT_NAME>
